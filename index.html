@@ -3,848 +3,838 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tbl2Md</title>
+    <title>Excel to Markdown Converter</title>
     <style>
-        /* CSS Variables for theming */
         :root {
-            --bg-color: #f4f7f6;
-            --text-color: #333;
-            --container-bg: #ffffff;
-            --border-color: #e0e0e0;
-            --input-bg: #ffffff;
-            --input-border: #ccc;
-            --accent-color: #007bff; /* Primary accent blue */
-            --shadow-color: rgba(0, 0, 0, 0.08);
-
-            /* Button Variables (Refined) */
-            --button-primary-bg: #007bff;
-            --button-primary-hover-bg: #0056b3;
-            --button-primary-border: #0069d9; /* Slightly darker primary border */
-
-            --button-secondary-bg: #6c757d; /* Muted for Clear */
-            --button-secondary-hover-bg: #5a6268;
-            --button-secondary-border: #525a61; /* Darker secondary border */
-
-            --button-text: #ffffff;
-            --button-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); /* More pronounced shadow */
-            --button-shadow-hover: 0 6px 18px rgba(0, 0, 0, 0.25);
-            --button-shadow-active: inset 0 2px 4px rgba(0, 0, 0, 0.2);
-            --button-active-transform: translateY(1px); /* For pressed effect */
-
-            /* Output Code / Copy Button */
-            --code-bg: #f8f8f8;
-            --copy-button-bg: #6c757d;
-            --copy-button-hover-bg: #5a6268;
-            --copy-button-text: #ffffff;
-
-            /* Markdown Preview */
-            --markdown-preview-bg: #fff;
-            --markdown-table-border: #ddd;
-            --markdown-table-header-bg: #f2f2f2;
+            --glass-bg: rgba(255, 255, 255, 0.1);
+            --glass-border: rgba(255, 255, 255, 0.2);
+            --glass-shadow: rgba(0, 0, 0, 0.1);
+            --text-primary: #1d1d1f;
+            --text-secondary: #515154;
+            --accent-blue: #007aff;
+            --accent-purple: #af52de;
+            --surface-primary: rgba(255, 255, 255, 0.9);
+            --surface-secondary: rgba(248, 248, 248, 0.8);
+            --backdrop-blur: blur(20px);
         }
 
         [data-theme="dark"] {
-            --bg-color: #2c313a;
-            --text-color: #e0e0e0;
-            --container-bg: #3b424d;
-            --border-color: #555;
-            --input-bg: #4a515c;
-            --input-border: #666;
-            --accent-color: #4a90e2; /* Dark mode primary accent */
-            --shadow-color: rgba(0, 0, 0, 0.3);
-
-            /* Dark Mode Button Variables */
-            --button-primary-bg: #4a90e2;
-            --button-primary-hover-bg: #357bd8;
-            --button-primary-border: #307ac1;
-
-            --button-secondary-bg: #8c9096;
-            --button-secondary-hover-bg: #7a7e84;
-            --button-secondary-border: #6c7075;
-
-            --button-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-            --button-shadow-hover: 0 6px 18px rgba(0, 0, 0, 0.4);
-            --button-shadow-active: inset 0 2px 4px rgba(0, 0, 0, 0.3);
-
-            --code-bg: #22262b;
-            --copy-button-bg: #8c9096;
-            --copy-button-hover-bg: #7a7e84;
-            --copy-button-text: #ffffff;
-
-            --markdown-preview-bg: #3b424d;
-            --markdown-table-border: #666;
-            --markdown-table-header-bg: #4a515c;
+            --glass-bg: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --glass-shadow: rgba(0, 0, 0, 0.3);
+            --text-primary: #f5f5f7;
+            --text-secondary: #86868b;
+            --surface-primary: rgba(30, 30, 30, 0.8);
+            --surface-secondary: rgba(20, 20, 20, 0.6);
         }
 
-        /* Base Styles */
         * {
-            box-sizing: border-box;
             margin: 0;
             padding: 0;
+            box-sizing: border-box;
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            display: flex;
-            justify-content: center;
-            align-items: flex-start; /* Align to top */
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
-            padding: 20px;
-            transition: background-color 0.3s, color 0.3s;
-            line-height: 1.6;
+            color: var(--text-primary);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        .container {
-            background-color: var(--container-bg);
-            border-radius: 12px;
-            box-shadow: 0 8px 25px var(--shadow-color);
-            padding: 30px;
-            width: 100%;
-            max-width: 900px;
-            border: 1px solid var(--border-color);
-            transition: background-color 0.3s, border-color 0.3s, box-shadow 0.3s;
+        [data-theme="dark"] body {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
         }
 
-        h1 {
+        .glass {
+            background: var(--glass-bg);
+            backdrop-filter: var(--backdrop-blur);
+            -webkit-backdrop-filter: var(--backdrop-blur);
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 8px 32px var(--glass-shadow);
+        }
+
+        .header {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            padding: 2rem 1rem;
             text-align: center;
-            color: var(--accent-color);
-            margin-bottom: 25px;
-            font-size: 2.2em;
-            font-weight: 600;
+            background: var(--surface-primary);
+            backdrop-filter: var(--backdrop-blur);
+            -webkit-backdrop-filter: var(--backdrop-blur);
+            border-bottom: 1px solid var(--glass-border);
         }
 
-        .header-controls {
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 25px;
+            flex-wrap: wrap;
+            gap: 1rem;
         }
 
-        /* Dark Mode Toggle */
-        .theme-switch-wrapper {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            font-size: 0.9em;
+        .header-text {
+            flex: 1;
+            text-align: left;
         }
 
-        .theme-switch {
-            display: inline-block;
-            height: 28px;
-            position: relative;
-            width: 50px;
+        .header h1 {
+            font-size: clamp(2rem, 4vw, 3rem);
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: -0.02em;
         }
 
-        .theme-switch input {
-            display: none;
-        }
-
-        .slider {
-            background-color: #ccc;
-            bottom: 0;
-            cursor: pointer;
-            left: 0;
-            position: absolute;
-            right: 0;
-            top: 0;
-            transition: .4s;
-            border-radius: 34px;
-        }
-
-        .slider:before {
-            background-color: #fff;
-            bottom: 4px;
-            content: "";
-            height: 20px;
-            left: 4px;
-            position: absolute;
-            transition: .4s;
-            width: 20px;
-            border-radius: 50%;
-        }
-
-        input:checked + .slider {
-            background-color: var(--accent-color);
-        }
-
-        input:checked + .slider:before {
-            transform: translateX(22px);
-        }
-
-        section {
-            margin-bottom: 30px;
-        }
-
-        label {
-            display: block;
-            margin-bottom: 8px;
+        .header p {
+            color: var(--text-secondary);
+            font-size: 1.125rem;
             font-weight: 500;
-            color: var(--text-color);
         }
 
-        textarea {
-            width: 100%;
-            height: 150px;
-            padding: 15px;
-            border: 1px solid var(--input-border);
-            border-radius: 8px;
-            font-size: 1em;
-            font-family: monospace;
-            background-color: var(--input-bg);
-            color: var(--text-color);
-            resize: vertical;
-            transition: border-color 0.3s, background-color 0.3s, color 0.3s;
-        }
-
-        .options-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
-            margin-bottom: 20px;
-        }
-
-        .option-group {
-            padding: 15px;
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            background-color: var(--input-bg);
-            transition: border-color 0.3s, background-color 0.3s;
-        }
-
-        .option-group label {
-            margin-bottom: 10px;
-        }
-
-        .checkbox-container {
-            display: flex;
-            align-items: center;
-            margin-top: 10px;
-        }
-
-        input[type="checkbox"] {
-            margin-right: 10px;
-            accent-color: var(--accent-color);
-        }
-
-        input[type="radio"] {
-            margin-right: 8px;
-            accent-color: var(--accent-color);
-        }
-
-        select {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid var(--input-border);
-            border-radius: 8px;
-            background-color: var(--input-bg);
-            color: var(--text-color);
-            font-size: 1em;
-            cursor: pointer;
-            appearance: none;
-            background-image: url('data:image/svg+xml;utf8,<svg fill="%23333" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5z"/><path d="M0 0h24v24H0z" fill="none"/></svg>');
-            background-repeat: no-repeat;
-            background-position: right 10px center;
-            background-size: 20px;
-            transition: border-color 0.3s, background-color 0.3s, color 0.3s;
-        }
-
-        [data-theme="dark"] select {
-            background-image: url('data:image/svg+xml;utf8,<svg fill="%23e0e0e0" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5z"/><path d="M0 0h24v24H0z" fill="none"/></svg>');
-        }
-
-        .radio-group div {
-            margin-bottom: 8px;
-        }
-
-        .action-buttons {
-            display: flex;
-            justify-content: center;
-            gap: 20px;
-            margin-top: 20px;
-        }
-
-        /* --- Button Styles (Redesigned) --- */
-        button {
-            padding: 14px 30px; /* Increased padding */
-            border: 1px solid; /* Defined border, color set per button */
-            border-radius: 8px; /* Consistent with other elements */
-            color: var(--button-text);
-            font-size: 1.1em;
-            font-weight: 600;
-            cursor: pointer;
-            transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease, border-color 0.3s ease;
-            box-shadow: var(--button-shadow); /* Applied new shadow */
+        .theme-toggle {
             position: relative;
-            overflow: hidden;
-            letter-spacing: 0.5px; /* Subtle text spacing */
+            width: 60px;
+            height: 30px;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        /* Primary Button (Process Button) */
-        #processButton {
-            background-color: var(--button-primary-bg);
-            border-color: var(--button-primary-border);
-        }
-
-        #processButton:hover {
-            background-color: var(--button-primary-hover-bg);
-            transform: translateY(-3px); /* More pronounced lift */
-            box-shadow: var(--button-shadow-hover); /* Deeper shadow on hover */
-        }
-
-        /* Secondary Button (Clear Button) */
-        #clearButton {
-            background-color: var(--button-secondary-bg);
-            border-color: var(--button-secondary-border);
-        }
-
-        #clearButton:hover {
-            background-color: var(--button-secondary-hover-bg);
-            transform: translateY(-3px);
-            box-shadow: var(--button-shadow-hover);
-        }
-
-        /* Active State for all main buttons */
-        button:active {
-            transform: var(--button-active-transform); /* Press down effect */
-            box-shadow: var(--button-shadow-active); /* Inset shadow */
-            transition: background-color 0.1s, transform 0.1s, box-shadow 0.1s; /* Faster transition for press */
-        }
-
-        /* Copy Button (More subtle, but consistent) */
-        .copy-btn {
-            position: absolute;
-            top: 15px;
-            right: 15px;
-            background-color: var(--copy-button-bg);
-            color: var(--copy-button-text);
-            padding: 8px 12px;
-            border-radius: 6px; /* Slightly smaller radius */
-            font-size: 0.85em;
-            font-weight: 500;
-            transition: background-color 0.2s, transform 0.1s;
-            box-shadow: none; /* No shadow for copy button */
-            border: 1px solid var(--copy-button-bg); /* Subtle border matching background */
-            letter-spacing: normal; /* Override button general spacing */
-        }
-
-        .copy-btn:hover {
-            background-color: var(--copy-button-hover-bg);
-            border-color: var(--copy-button-hover-bg);
-            transform: none; /* No lift for copy button */
-        }
-        .copy-btn:active {
-            transform: translateY(1px); /* Slight press for copy button */
-            box-shadow: none;
-        }
-
-        /* --- End Button Styles --- */
-
-
-        .output-section {
-            position: relative;
-            margin-top: 30px;
-        }
-
-        .output-section pre {
-            background-color: var(--code-bg);
-            color: var(--text-color);
-            padding: 20px;
-            border-radius: 8px;
-            overflow-x: auto;
-            white-space: pre-wrap; /* Preserve formatting but wrap long lines */
-            word-break: break-all; /* Break words for long content */
-            font-family: 'Fira Code', 'Cascadia Code', monospace; /* Modern monospace fonts */
-            font-size: 0.95em;
-            line-height: 1.5;
-            border: 1px solid var(--border-color);
-            max-height: 400px; /* Limit height and allow scrolling */
-            transition: background-color 0.3s, color 0.3s, border-color 0.3s;
-        }
-
-
-        .copy-feedback {
-            position: absolute;
-            top: 50px; /* Adjust below button */
-            right: 15px;
-            background-color: #28a745; /* Success green */
-            color: white;
-            padding: 5px 10px;
-            border-radius: 5px;
-            font-size: 0.8em;
+        .theme-toggle input {
             opacity: 0;
-            transition: opacity 0.3s ease-in-out;
-            pointer-events: none; /* Allow clicks through */
-            z-index: 10;
+            width: 0;
+            height: 0;
         }
 
-        .copy-feedback.show {
+        .theme-slider {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: var(--glass-bg);
+            backdrop-filter: var(--backdrop-blur);
+            -webkit-backdrop-filter: var(--backdrop-blur);
+            border: 1px solid var(--glass-border);
+            border-radius: 15px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .theme-slider:before {
+            content: "☀️";
+            position: absolute;
+            height: 22px;
+            width: 22px;
+            left: 4px;
+            bottom: 3px;
+            background: white;
+            border-radius: 50%;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        input:checked + .theme-slider:before {
+            content: "🌙";
+            transform: translateX(30px);
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem 1rem;
+        }
+
+        .converter-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            height: calc(100vh - 200px);
+            min-height: 600px;
+        }
+
+        @media (max-width: 1024px) {
+            .converter-grid {
+                grid-template-columns: 1fr;
+                height: auto;
+            }
+            
+            .header-content {
+                justify-content: center;
+                text-align: center;
+            }
+            
+            .header-text {
+                text-align: center;
+            }
+        }
+
+        .card {
+            border-radius: 20px;
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            background: var(--surface-primary);
+            backdrop-filter: var(--backdrop-blur);
+            -webkit-backdrop-filter: var(--backdrop-blur);
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 8px 32px var(--glass-shadow);
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 40px var(--glass-shadow);
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .section-title {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .icon {
+            font-size: 1.5rem;
+        }
+
+        .button {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            background: var(--surface-primary);
+            backdrop-filter: var(--backdrop-blur);
+            -webkit-backdrop-filter: var(--backdrop-blur);
+            color: var(--text-primary);
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            text-decoration: none;
+        }
+
+        .button:hover:not(:disabled) {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 16px var(--glass-shadow);
+            background: var(--accent-blue);
+            color: white;
+            border-color: var(--accent-blue);
+        }
+
+        .button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .button.copied {
+            background: #34c759;
+            color: white;
+            border-color: #34c759;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .textarea-container {
+            flex: 1;
+            position: relative;
+            border-radius: 16px;
+            overflow: hidden;
+        }
+
+        .textarea {
+            width: 100%;
+            height: 100%;
+            padding: 1rem;
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, monospace;
+            font-size: 0.875rem;
+            line-height: 1.5;
+            resize: none;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            background: var(--surface-primary);
+            backdrop-filter: var(--backdrop-blur);
+            -webkit-backdrop-filter: var(--backdrop-blur);
+            color: var(--text-primary);
+        }
+
+        .textarea:focus {
+            outline: none;
+            border-color: var(--accent-blue);
+            box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.1);
+        }
+
+        .textarea::placeholder {
+            color: var(--text-secondary);
+        }
+
+        .textarea.readonly {
+            background: var(--surface-secondary);
+        }
+
+        .placeholder-overlay {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            pointer-events: none;
+            color: var(--text-secondary);
+            text-align: center;
+            padding: 2rem;
+            border-radius: 16px;
+        }
+
+        .placeholder-content {
+            text-align: center;
+        }
+
+        .placeholder-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            opacity: 0.6;
+        }
+
+        .placeholder-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--text-primary);
+        }
+
+        .placeholder-text {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        .instructions {
+            margin-top: 3rem;
+            max-width: 1000px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .instructions-card {
+            border-radius: 24px;
+            padding: 2rem;
+            background: var(--surface-primary);
+            backdrop-filter: var(--backdrop-blur);
+            -webkit-backdrop-filter: var(--backdrop-blur);
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 8px 32px var(--glass-shadow);
+        }
+
+        .instructions h2 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+
+        .instructions-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .instruction-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+            padding: 1rem;
+            border-radius: 16px;
+            background: var(--surface-secondary);
+            backdrop-filter: var(--backdrop-blur);
+            -webkit-backdrop-filter: var(--backdrop-blur);
+            border: 1px solid var(--glass-border);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .instruction-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px var(--glass-shadow);
+        }
+
+        .instruction-number {
+            flex-shrink: 0;
+            width: 2rem;
+            height: 2rem;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.875rem;
+            font-weight: 700;
+            color: white;
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+        }
+
+        .instruction-content h3 {
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+            font-size: 1rem;
+        }
+
+        .instruction-content p {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            line-height: 1.4;
+        }
+
+        .toast {
+            position: fixed;
+            top: 2rem;
+            right: 2rem;
+            padding: 1rem 1.5rem;
+            border-radius: 16px;
+            box-shadow: 0 12px 40px var(--glass-shadow);
+            transform: translateY(-100px);
+            opacity: 0;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 1000;
+            background: var(--surface-primary);
+            backdrop-filter: var(--backdrop-blur);
+            -webkit-backdrop-filter: var(--backdrop-blur);
+            border: 1px solid var(--glass-border);
+            color: var(--text-primary);
+            font-weight: 500;
+        }
+
+        .toast.show {
+            transform: translateY(0);
             opacity: 1;
         }
 
-        .markdown-preview-section {
-            margin-top: 30px;
+        .toast.success {
+            background: rgba(52, 199, 89, 0.9);
+            color: white;
+            border-color: #34c759;
         }
 
-        .markdown-preview {
-            background-color: var(--markdown-preview-bg);
-            padding: 20px;
-            border-radius: 8px;
-            border: 1px solid var(--border-color);
-            min-height: 100px;
-            max-height: 400px;
-            overflow-y: auto;
-            transition: background-color 0.3s, border-color 0.3s;
-        }
-
-        .markdown-preview table {
-            width: 100%;
-            border-collapse: collapse;
-            margin: 0;
-        }
-
-        .markdown-preview th,
-        .markdown-preview td {
-            border: 1px solid var(--markdown-table-border);
-            padding: 10px 15px;
-            text-align: left;
-            transition: border-color 0.3s;
-        }
-
-        .markdown-preview th {
-            background-color: var(--markdown-table-header-bg);
-            font-weight: bold;
-            transition: background-color 0.3s;
-        }
-
-        /* Responsive adjustments */
-        @media (max-width: 768px) {
-            .container {
-                padding: 20px;
-            }
-
-            h1 {
-                font-size: 1.8em;
-                margin-bottom: 20px;
-            }
-
-            .header-controls {
+        @media (max-width: 640px) {
+            .button-group {
                 flex-direction: column;
-                gap: 15px;
-                align-items: flex-start;
-                margin-bottom: 20px;
             }
-
-            .options-grid {
+            
+            .toast {
+                left: 1rem;
+                right: 1rem;
+                top: 1rem;
+            }
+            
+            .instructions-grid {
                 grid-template-columns: 1fr;
-                gap: 15px;
             }
+        }
 
-            .action-buttons {
-                flex-direction: column;
-                gap: 15px;
-            }
-
-            button {
-                width: 100%;
-            }
-
-            .copy-btn {
-                top: 10px;
-                right: 10px;
-            }
-
-            .copy-feedback {
-                top: 40px;
-                right: 10px;
-            }
+        /* Smooth transitions for theme changes */
+        * {
+            transition: background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+                       border-color 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+                       color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header-controls">
-            <h1>Tbl2Md</h1>
-            <div class="theme-switch-wrapper">
-                <label class="theme-switch" for="darkModeToggle">
-                    <input type="checkbox" id="darkModeToggle">
-                    <span class="slider"></span>
-                </label>
-                <label for="darkModeToggle">Dark Mode</label>
+    <!-- Header -->
+    <div class="header">
+        <div class="header-content">
+            <div class="header-text">
+                <h1>Excel to Markdown</h1>
+                <p>Transform spreadsheet data into perfectly formatted tables</p>
             </div>
+            <label class="theme-toggle">
+                <input type="checkbox" id="themeToggle">
+                <span class="theme-slider"></span>
+            </label>
         </div>
-
-        <section>
-            <label for="excelInput">Paste your Excel table here:</label>
-            <textarea id="excelInput" placeholder="Paste data from Excel (Ctrl+V or Cmd+V)"></textarea>
-        </section>
-
-        <section class="options-grid">
-            <div class="option-group">
-                <label>Cell Options:</label>
-                <div class="checkbox-container">
-                    <input type="checkbox" id="trimWhitespace" checked>
-                    <label for="trimWhitespace">Trim cell whitespace</label>
-                </div>
-            </div>
-
-            <div class="option-group">
-                <label for="headerCasing">Header Casing:</label>
-                <select id="headerCasing">
-                    <option value="none">As Is</option>
-                    <option value="lower">lowercase</option>
-                    <option value="upper">UPPERCASE</option>
-                    <option value="snake">snake_case</option>
-                    <option value="kebab">kebab-case</option>
-                    <option value="pascal">PascalCase</option>
-                    <option value="camel">camelCase</option>
-                </select>
-            </div>
-
-            <div class="option-group">
-                <label>Output Type:</label>
-                <div class="radio-group">
-                    <div>
-                        <input type="radio" id="outputMarkdown" name="outputType" value="markdown" checked>
-                        <label for="outputMarkdown">Markdown Table</label>
-                    </div>
-                    <div>
-                        <input type="radio" id="outputJson" name="outputType" value="json">
-                        <label for="outputJson">JSON Array</label>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <div class="action-buttons">
-            <button id="processButton">Convert Table</button>
-            <button id="clearButton">Clear All</button>
-        </div>
-
-        <section class="output-section">
-            <label>Output:</label>
-            <pre><code id="outputCode"></code></pre>
-            <button class="copy-btn" id="copyButton">Copy</button>
-            <span class="copy-feedback" id="copyFeedback">Copied!</span>
-        </section>
-
-        <section class="markdown-preview-section" id="markdownPreviewSection" style="display:none;">
-            <label>Markdown Table Preview:</label>
-            <div class="markdown-preview" id="markdownPreview"></div>
-        </section>
     </div>
 
+    <!-- Main Content -->
+    <div class="container">
+        <div class="converter-grid">
+            <!-- Input Section -->
+            <div class="card glass">
+                <div class="section-header">
+                    <div class="section-title">
+                        <span class="icon">📋</span>
+                        Excel Data
+                    </div>
+                    <button class="button" id="clearBtn" disabled>
+                        <span>✕</span>
+                        Clear
+                    </button>
+                </div>
+                <div class="textarea-container">
+                    <textarea 
+                        id="excelInput" 
+                        class="textarea" 
+                        placeholder="Paste your Excel table data here...
+
+Copy directly from Excel, Google Sheets, or any spreadsheet application."
+                    ></textarea>
+                    <div class="placeholder-overlay" id="inputPlaceholder">
+                        <div class="placeholder-content">
+                            <div class="placeholder-icon">📊</div>
+                            <p class="placeholder-title">Paste Excel Data</p>
+                            <p class="placeholder-text">Copy table data from your favorite spreadsheet app</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Output Section -->
+            <div class="card glass">
+                <div class="section-header">
+                    <div class="section-title">
+                        <span class="icon">📝</span>
+                        Markdown Table
+                    </div>
+                    <div class="button-group">
+                        <button class="button" id="copyBtn" disabled>
+                            <span>📄</span>
+                            Copy
+                        </button>
+                        <button class="button" id="downloadBtn" disabled>
+                            <span>⬇️</span>
+                            Download
+                        </button>
+                    </div>
+                </div>
+                <div class="textarea-container">
+                    <textarea 
+                        id="markdownOutput" 
+                        class="textarea readonly" 
+                        placeholder="Your converted markdown table will appear here..."
+                        readonly
+                    ></textarea>
+                    <div class="placeholder-overlay" id="outputPlaceholder">
+                        <div class="placeholder-content">
+                            <div class="placeholder-icon">✨</div>
+                            <p class="placeholder-title">Markdown Output</p>
+                            <p class="placeholder-text">Your converted table will appear here</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Instructions -->
+        <div class="instructions">
+            <div class="instructions-card glass">
+                <h2>How it works</h2>
+                <div class="instructions-grid">
+                    <div class="instruction-item">
+                        <span class="instruction-number">1</span>
+                        <div class="instruction-content">
+                            <h3>Copy your data</h3>
+                            <p>Select and copy table data from Excel, Google Sheets, or any spreadsheet application.</p>
+                        </div>
+                    </div>
+                    <div class="instruction-item">
+                        <span class="instruction-number">2</span>
+                        <div class="instruction-content">
+                            <h3>Paste and convert</h3>
+                            <p>Paste your data into the input field and watch it automatically convert to Markdown format.</p>
+                        </div>
+                    </div>
+                    <div class="instruction-item">
+                        <span class="instruction-number">3</span>
+                        <div class="instruction-content">
+                            <h3>Copy or download</h3>
+                            <p>Use the generated Markdown table in your documentation, README files, or anywhere else.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast notification -->
+    <div class="toast" id="toast"></div>
+
     <script>
-        // --- DOM Elements ---
-        const excelInput = document.getElementById('excelInput');
-        const trimWhitespaceCheckbox = document.getElementById('trimWhitespace');
-        const headerCasingSelect = document.getElementById('headerCasing');
-        const outputMarkdownRadio = document.getElementById('outputMarkdown');
-        const outputJsonRadio = document.getElementById('outputJson');
-        const processButton = document.getElementById('processButton');
-        const clearButton = document.getElementById('clearButton');
-        const outputCode = document.getElementById('outputCode');
-        const copyButton = document.getElementById('copyButton');
-        const copyFeedback = document.getElementById('copyFeedback');
-        const markdownPreviewSection = document.getElementById('markdownPreviewSection');
-        const markdownPreview = document.getElementById('markdownPreview');
-        const darkModeToggle = document.getElementById('darkModeToggle');
+        // Theme toggle functionality
+        const themeToggle = document.getElementById('themeToggle');
+        const html = document.documentElement;
 
-        // --- Event Listeners ---
-        excelInput.addEventListener('input', processTableData); // Process on direct input/typing
-        excelInput.addEventListener('paste', (event) => {
-            // Delay to allow textarea value to update after paste
-            setTimeout(processTableData, 0);
-        });
-        trimWhitespaceCheckbox.addEventListener('change', processTableData);
-        headerCasingSelect.addEventListener('change', processTableData);
-        outputMarkdownRadio.addEventListener('change', processTableData);
-        outputJsonRadio.addEventListener('change', processTableData);
-        processButton.addEventListener('click', processTableData);
-        clearButton.addEventListener('click', clearAll);
-        copyButton.addEventListener('click', copyOutput);
-        darkModeToggle.addEventListener('change', toggleDarkMode);
-
-        // --- Core Functions ---
-
-        /**
-         * Main function to process the pasted Excel data based on options.
-         */
-        function processTableData() {
-            const inputText = excelInput.value;
-            const trimWhitespace = trimWhitespaceCheckbox.checked;
-            const headerCasing = headerCasingSelect.value;
-            const outputType = document.querySelector('input[name="outputType"]:checked').value;
-
-            if (!inputText.trim()) {
-                clearOutput();
-                return;
-            }
-
-            const { headers, dataRows, originalHeaders } = parsePastedData(inputText, trimWhitespace);
-
-            if (headers.length === 0 || dataRows.length === 0) {
-                outputCode.textContent = "Error: Could not parse table. Ensure it's tab-separated data with at least one header row and one data row.";
-                markdownPreview.innerHTML = '';
-                markdownPreviewSection.style.display = 'none';
-                return;
-            }
-
-            const formattedHeaders = headers.map(header => formatHeader(header, headerCasing));
-            const dataStructure = convertToStructuredData(dataRows, formattedHeaders, trimWhitespace);
-
-            let outputText = '';
-            let markdownTableHtml = '';
-
-            if (outputType === 'markdown') {
-                outputText = generateMarkdown(dataStructure, originalHeaders, headerCasing);
-                markdownTableHtml = generateHtmlTableFromData(dataStructure, originalHeaders, headerCasing);
-                markdownPreviewSection.style.display = 'block';
-                markdownPreview.innerHTML = markdownTableHtml;
-            } else if (outputType === 'json') {
-                outputText = generateJson(dataStructure);
-                markdownPreviewSection.style.display = 'none';
-                markdownPreview.innerHTML = '';
-            }
-
-            outputCode.textContent = outputText;
+        // Check for saved theme preference or default to light mode
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme) {
+            html.setAttribute('data-theme', savedTheme);
+            themeToggle.checked = savedTheme === 'dark';
+        } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            html.setAttribute('data-theme', 'dark');
+            themeToggle.checked = true;
         }
 
-        /**
-         * Parses the raw pasted text into headers and data rows.
-         * @param {string} text - The raw pasted text.
-         * @param {boolean} trim - Whether to trim whitespace from cells.
-         * @returns {{headers: string[], dataRows: string[][], originalHeaders: string[]}}
-         */
-        function parsePastedData(text, trim) {
-            const lines = text.trim().split('\n').filter(line => line.trim() !== ''); // Filter out empty lines
-
-            if (lines.length === 0) {
-                return { headers: [], dataRows: [], originalHeaders: [] };
-            }
-
-            const processRow = (rowText) => rowText.split('\t').map(cell => trim ? cell.trim() : cell);
-
-            const originalHeaders = processRow(lines[0]);
-            const headers = originalHeaders.slice(); // Copy for potential modification
-            const dataRows = lines.slice(1).map(processRow);
-
-            return { headers, dataRows, originalHeaders };
-        }
-
-        /**
-         * Formats a header string based on the selected casing.
-         * @param {string} header - The original header string.
-         * @param {string} casingType - The desired casing type ('none', 'lower', 'upper', 'snake', 'kebab', 'pascal', 'camel').
-         * @returns {string} The formatted header.
-         */
-        function formatHeader(header, casingType) {
-            if (!header) return '';
-            let formatted = header.trim();
-
-            switch (casingType) {
-                case 'lower':
-                    formatted = formatted.toLowerCase();
-                    break;
-                case 'upper':
-                    formatted = formatted.toUpperCase();
-                    break;
-                case 'snake':
-                    formatted = formatted.replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_]/g, '').toLowerCase();
-                    break;
-                case 'kebab':
-                    formatted = formatted.replace(/\s+/g, '-').replace(/[^a-zA-Z0-9-]/g, '').toLowerCase();
-                    break;
-                case 'pascal':
-                    formatted = formatted
-                        .replace(/(?:^\w|[A-Z]|\b\w)/g, (word, index) => word.toUpperCase())
-                        .replace(/\s+/g, '')
-                        .replace(/[^a-zA-Z0-9]/g, '');
-                    break;
-                case 'camel':
-                    formatted = formatted
-                        .replace(/(?:^\w|[A-Z]|\b\w)/g, (word, index) => index === 0 ? word.toLowerCase() : word.toUpperCase())
-                        .replace(/\s+/g, '')
-                        .replace(/[^a-zA-Z0-9]/g, '');
-                    break;
-                case 'none':
-                default:
-                    break;
-            }
-            return formatted;
-        }
-
-        /**
-         * Converts parsed data rows into an array of objects.
-         * @param {string[][]} dataRows - Array of arrays, where each inner array is a row of cells.
-         * @param {string[]} formattedHeaders - Array of formatted header strings.
-         * @param {boolean} trimCells - Whether to trim individual cell values.
-         * @returns {object[]} Array of objects, each representing a row.
-         */
-        function convertToStructuredData(dataRows, formattedHeaders, trimCells) {
-            return dataRows.map(row => {
-                const rowObject = {};
-                formattedHeaders.forEach((header, index) => {
-                    const cellValue = row[index] !== undefined ? row[index] : '';
-                    rowObject[header] = trimCells ? cellValue.trim() : cellValue;
-                });
-                return rowObject;
-            });
-        }
-
-        /**
-         * Generates a Markdown table string.
-         * @param {object[]} data - The structured data.
-         * @param {string[]} originalHeaders - The original (unformatted) headers for Markdown presentation.
-         * @param {string} headerCasing - The chosen header casing for column alignment calculation.
-         * @returns {string} The Markdown table string.
-         */
-        function generateMarkdown(data, originalHeaders, headerCasing) {
-            if (data.length === 0) return '';
-
-            // Use original headers for Markdown visual representation, but potentially formatted for length calc
-            const displayHeaders = originalHeaders.map(h => formatHeader(h, headerCasing === 'none' ? 'none' : headerCasing));
-
-            // Calculate max column width for alignment
-            const columnWidths = displayHeaders.map(h => h.length);
-            data.forEach(row => {
-                originalHeaders.forEach((originalHeader, colIndex) => {
-                    const cellValue = row[formatHeader(originalHeader, headerCasing === 'none' ? 'none' : headerCasing)];
-                    if (cellValue !== undefined) {
-                        columnWidths[colIndex] = Math.max(columnWidths[colIndex], String(cellValue).length);
-                    }
-                });
-            });
-
-            const escapeMarkdownCell = (text) => {
-                // Escape pipes and backslashes in cell content for Markdown
-                return String(text).replace(/\|/g, '\\|').replace(/\\/g, '\\\\');
-            };
-
-            // Build header row
-            const headerRow = '| ' + displayHeaders.map((h, i) => h.padEnd(columnWidths[i])).join(' | ') + ' |';
-
-            // Build separator row
-            const separatorRow = '|' + columnWidths.map(width => ' '.padEnd(width + 2, '-')).join('|') + '|';
-
-            // Build data rows
-            const dataRows = data.map(row => {
-                const cells = originalHeaders.map((originalHeader, colIndex) => {
-                    const formattedKey = formatHeader(originalHeader, headerCasing === 'none' ? 'none' : headerCasing);
-                    const cellValue = row[formattedKey] !== undefined ? row[formattedKey] : '';
-                    return escapeMarkdownCell(cellValue).padEnd(columnWidths[colIndex]);
-                });
-                return '| ' + cells.join(' | ') + ' |';
-            }).join('\n');
-
-            return `${headerRow}\n${separatorRow}\n${dataRows}`;
-        }
-
-
-        /**
-         * Generates a JSON string.
-         * @param {object[]} data - The structured data.
-         * @returns {string} The JSON string.
-         */
-        function generateJson(data) {
-            return JSON.stringify(data, null, 2); // Pretty print with 2 space indent
-        }
-
-        /**
-         * Generates an HTML table from the structured data for preview.
-         * @param {object[]} data - The structured data.
-         * @param {string[]} originalHeaders - The original (unformatted) headers.
-         * @param {string} headerCasing - The chosen header casing.
-         * @returns {string} HTML table string.
-         */
-        function generateHtmlTableFromData(data, originalHeaders, headerCasing) {
-            if (data.length === 0) return 'No data to preview.';
-
-            const formattedHeaders = originalHeaders.map(h => formatHeader(h, headerCasing === 'none' ? 'none' : headerCasing));
-
-            let html = '<table><thead><tr>';
-            originalHeaders.forEach(originalHeader => {
-                html += `<th>${originalHeader}</th>`; // Display original headers for clarity in preview
-            });
-            html += '</tr></thead><tbody>';
-
-            data.forEach(row => {
-                html += '<tr>';
-                originalHeaders.forEach(originalHeader => {
-                    const formattedKey = formatHeader(originalHeader, headerCasing === 'none' ? 'none' : headerCasing);
-                    const cellValue = row[formattedKey] !== undefined ? row[formattedKey] : '';
-                    html += `<td>${cellValue}</td>`;
-                });
-                html += '</tr>';
-            });
-
-            html += '</tbody></table>';
-            return html;
-        }
-
-        /**
-         * Copies the content of the output area to the clipboard.
-         */
-        function copyOutput() {
-            const textToCopy = outputCode.textContent;
-            if (textToCopy) {
-                navigator.clipboard.writeText(textToCopy)
-                    .then(() => {
-                        copyFeedback.classList.add('show');
-                        setTimeout(() => {
-                            copyFeedback.classList.remove('show');
-                        }, 2000);
-                    })
-                    .catch(err => {
-                        alert('Failed to copy: ' + err);
-                        console.error('Failed to copy: ', err);
-                    });
-            }
-        }
-
-        /**
-         * Clears all inputs and outputs.
-         */
-        function clearAll() {
-            excelInput.value = '';
-            outputCode.textContent = '';
-            markdownPreview.innerHTML = '';
-            markdownPreviewSection.style.display = 'none';
-            // Reset options to default if desired, or leave as last used.
-            // trimWhitespaceCheckbox.checked = true;
-            // headerCasingSelect.value = 'none';
-            // outputMarkdownRadio.checked = true;
-        }
-
-        /**
-         * Toggles between light and dark mode and saves preference.
-         */
-        function toggleDarkMode() {
-            if (darkModeToggle.checked) {
-                document.documentElement.setAttribute('data-theme', 'dark');
+        themeToggle.addEventListener('change', function() {
+            if (this.checked) {
+                html.setAttribute('data-theme', 'dark');
                 localStorage.setItem('theme', 'dark');
             } else {
-                document.documentElement.setAttribute('data-theme', 'light');
+                html.setAttribute('data-theme', 'light');
                 localStorage.setItem('theme', 'light');
+            }
+        });
+
+        // Excel to Markdown conversion logic
+        function parseExcelData(data) {
+            if (!data.trim()) {
+                return { rows: [], maxColumns: 0 };
+            }
+
+            const lines = data.split('\n').filter(line => line.trim() !== '');
+            
+            if (lines.length === 0) {
+                return { rows: [], maxColumns: 0 };
+            }
+
+            let maxColumns = 0;
+            const rows = [];
+
+            lines.forEach(line => {
+                let cells;
+                
+                if (line.includes('\t')) {
+                    cells = line.split('\t');
+                } else if (line.includes(',')) {
+                    cells = line.split(',');
+                } else {
+                    cells = line.split(/\s{2,}/);
+                }
+
+                const tableCells = cells.map(cell => {
+                    const cleanCell = cell.trim();
+                    return {
+                        value: cleanCell,
+                        isEmpty: cleanCell === ''
+                    };
+                });
+
+                rows.push({ cells: tableCells });
+                maxColumns = Math.max(maxColumns, tableCells.length);
+            });
+
+            // Normalize all rows to have the same number of columns
+            rows.forEach(row => {
+                while (row.cells.length < maxColumns) {
+                    row.cells.push({ value: '', isEmpty: true });
+                }
+            });
+
+            return { rows, maxColumns };
+        }
+
+        function generateMarkdownTable(parsedTable) {
+            if (parsedTable.rows.length === 0 || parsedTable.maxColumns === 0) {
+                return '';
+            }
+
+            const { rows, maxColumns } = parsedTable;
+            
+            // Calculate column widths for better formatting
+            const columnWidths = new Array(maxColumns).fill(0);
+            
+            rows.forEach(row => {
+                row.cells.forEach((cell, index) => {
+                    columnWidths[index] = Math.max(columnWidths[index], cell.value.length);
+                });
+            });
+
+            // Ensure minimum width of 3 for each column
+            columnWidths.forEach((width, index) => {
+                columnWidths[index] = Math.max(width, 3);
+            });
+
+            let markdown = '';
+
+            // Generate header row (first row)
+            if (rows.length > 0) {
+                const headerCells = rows[0].cells.map((cell, index) => 
+                    cell.value.padEnd(columnWidths[index])
+                );
+                markdown += `| ${headerCells.join(' | ')} |\n`;
+
+                // Generate separator row
+                const separators = columnWidths.map(width => '-'.repeat(width));
+                markdown += `| ${separators.join(' | ')} |\n`;
+
+                // Generate data rows (skip first row as it's the header)
+                for (let i = 1; i < rows.length; i++) {
+                    const dataCells = rows[i].cells.map((cell, index) => 
+                        cell.value.padEnd(columnWidths[index])
+                    );
+                    markdown += `| ${dataCells.join(' | ')} |\n`;
+                }
+            }
+
+            return markdown.trim();
+        }
+
+        function convertExcelToMarkdown(excelData) {
+            try {
+                const parsedTable = parseExcelData(excelData);
+                return generateMarkdownTable(parsedTable);
+            } catch (error) {
+                console.error('Error converting Excel to Markdown:', error);
+                return 'Error: Unable to parse the pasted data. Please ensure it\'s a valid table format.';
             }
         }
 
-        // --- Initialization ---
-        document.addEventListener('DOMContentLoaded', () => {
-            // Load saved theme preference
-            const savedTheme = localStorage.getItem('theme');
-            if (savedTheme === 'dark') {
-                darkModeToggle.checked = true;
-                document.documentElement.setAttribute('data-theme', 'dark');
-            } else {
-                // Default to light if no preference or 'light'
-                darkModeToggle.checked = false;
-                document.documentElement.setAttribute('data-theme', 'light');
-            }
+        function showToast(message, type = 'default') {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = `toast ${type}`;
+            toast.classList.add('show');
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
 
-            // Initial processing if there's pre-filled content (e.g., from browser history)
-            processTableData();
+        function updatePlaceholders() {
+            const excelInput = document.getElementById('excelInput');
+            const markdownOutput = document.getElementById('markdownOutput');
+            const inputPlaceholder = document.getElementById('inputPlaceholder');
+            const outputPlaceholder = document.getElementById('outputPlaceholder');
+            
+            inputPlaceholder.style.display = excelInput.value.trim() ? 'none' : 'flex';
+            outputPlaceholder.style.display = markdownOutput.value.trim() ? 'none' : 'flex';
+        }
+
+        function updateButtons() {
+            const excelInput = document.getElementById('excelInput');
+            const markdownOutput = document.getElementById('markdownOutput');
+            const clearBtn = document.getElementById('clearBtn');
+            const copyBtn = document.getElementById('copyBtn');
+            const downloadBtn = document.getElementById('downloadBtn');
+            
+            const hasInput = excelInput.value.trim() !== '';
+            const hasOutput = markdownOutput.value.trim() !== '';
+            
+            clearBtn.disabled = !hasInput;
+            copyBtn.disabled = !hasOutput;
+            downloadBtn.disabled = !hasOutput;
+        }
+
+        // Event listeners
+        document.addEventListener('DOMContentLoaded', function() {
+            const excelInput = document.getElementById('excelInput');
+            const markdownOutput = document.getElementById('markdownOutput');
+            const clearBtn = document.getElementById('clearBtn');
+            const copyBtn = document.getElementById('copyBtn');
+            const downloadBtn = document.getElementById('downloadBtn');
+
+            // Convert Excel to Markdown on input
+            excelInput.addEventListener('input', function() {
+                const excelData = excelInput.value;
+                if (excelData.trim()) {
+                    const converted = convertExcelToMarkdown(excelData);
+                    markdownOutput.value = converted;
+                } else {
+                    markdownOutput.value = '';
+                }
+                updatePlaceholders();
+                updateButtons();
+            });
+
+            // Handle paste event
+            excelInput.addEventListener('paste', function(e) {
+                setTimeout(() => {
+                    const excelData = excelInput.value;
+                    if (excelData.trim()) {
+                        const converted = convertExcelToMarkdown(excelData);
+                        markdownOutput.value = converted;
+                    } else {
+                        markdownOutput.value = '';
+                    }
+                    updatePlaceholders();
+                    updateButtons();
+                }, 0);
+            });
+
+            // Clear button
+            clearBtn.addEventListener('click', function() {
+                excelInput.value = '';
+                markdownOutput.value = '';
+                updatePlaceholders();
+                updateButtons();
+                showToast('Cleared successfully');
+            });
+
+            // Copy button
+            copyBtn.addEventListener('click', async function() {
+                if (!markdownOutput.value.trim()) return;
+
+                try {
+                    await navigator.clipboard.writeText(markdownOutput.value);
+                    
+                    // Update button appearance
+                    const originalHTML = copyBtn.innerHTML;
+                    copyBtn.innerHTML = `<span>✓</span>Copied!`;
+                    copyBtn.classList.add('copied');
+                    
+                    showToast('Copied to clipboard!', 'success');
+                    
+                    setTimeout(() => {
+                        copyBtn.innerHTML = originalHTML;
+                        copyBtn.classList.remove('copied');
+                    }, 2000);
+                } catch (error) {
+                    showToast('Copy failed. Please select and copy manually.');
+                }
+            });
+
+            // Download button
+            downloadBtn.addEventListener('click', function() {
+                if (!markdownOutput.value.trim()) return;
+
+                const blob = new Blob([markdownOutput.value], { type: 'text/markdown' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'table.md';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+
+                showToast('Download started', 'success');
+            });
+
+            // Initial state
+            updatePlaceholders();
+            updateButtons();
         });
     </script>
 </body>
